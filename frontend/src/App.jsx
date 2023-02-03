@@ -1,33 +1,36 @@
+import { QueryClient, QueryClientProvider } from 'react-query'
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import * as Auth from './pages/Auth/index';
-import ProtectRoutes from "./components/ProtectRoutes";
-import { UserProvider } from "./context/UserContext";
-
-import { QueryClient, QueryClientProvider } from 'react-query'
-
 const queryClient = new QueryClient()
+
+import HomePage from "./pages/HomePage";
+import * as ProfilePages from './pages/Profile/index';
+import * as AuthPages from './pages/auth/index';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-
-      <Router>
-        <UserProvider>
+        <Router>
           <Routes>
-              <Route index element={<div>App</div>} />
-              <Route element={<ProtectRoutes />}>
-                <Route path='/profile' element={<Auth.ProfilePage />} />
-              </Route>
-              <Route path="/login" element={<Auth.LoginPage />} />
-              <Route path="/register" element={<Auth.RegisterPage />} />
-          </Routes>
-        </UserProvider>
+            <Route index element={<HomePage />} />
 
-      </Router>
+            <Route path='/profile' element={
+              <ProtectedRoute>
+                <ProfilePages.Index />
+              </ProtectedRoute>
+            } />
+
+            <Route path='/login' element={<AuthPages.Login />} />
+            <Route path='/register' element={<AuthPages.Register />} />
+
+            <Route path='/failed' element={<div>Failed Process...</div>} />
+          </Routes>
+        </Router>
      </QueryClientProvider>
   )
 }
 
 export default App
+

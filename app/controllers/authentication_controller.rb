@@ -1,6 +1,6 @@
 class AuthenticationController < ApplicationController
 
-    skip_before_action :auth_req, only: [:login, :register]
+    skip_before_action :auth_req, only: [:login, :register, :getuser]
 
     #POST /auth/login
     def login
@@ -22,6 +22,19 @@ class AuthenticationController < ApplicationController
         else 
             render json: @user.errors, status: :unprocessable_entity
         end 
+    end
+
+    #GET /auth/user
+    def getuser
+        header = request.headers['Authorization']
+        header = header.split(" ").last if header
+        decoded = jwt_decode(header)
+        if decoded == 1
+            render json: { error: "Invalid Token" }, status: :unauthorized
+        else
+            @user = User.find(decoded[:user_id])
+            render json: @user
+        end
     end
 
     private

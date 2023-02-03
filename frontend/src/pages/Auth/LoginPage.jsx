@@ -1,68 +1,59 @@
-import { useUser } from "../../context/UserContext";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { useMutation } from "react-query";
+import { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 function LoginPage() {
 
-  const [form, setForm] = useState(null)
-  const [errors, setErrors] = useState(null)
-  const [onLoad, setOnLoad] = useState(false)
+    const navigate = useNavigate()
 
-  const auth = useUser()
-  const navigate = useNavigate()
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState(null);
+    const [form, setForm] = useState({
+        email: null,
+        password: null
+    });
 
-	const handleLoginMutation = useMutation({
-		mutationFn: (() =>
-			fetch('http://localhost:3001/auth/login', {
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				method: 'POST',
-				body: JSON.stringify(form)
-			}).then(res =>
-				res.json()
-			)
-		),
-		onSuccess: () => {
-			if (handleLoginMutation.data.token) {
-				console.log(handleLoginMutation.data.token);
-			} else {
-				console.log('error')
-			}
-		}
-	})
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    if (!form || !form.email || !form.password) {
-      setErrors("Ingrese contraseña y email")
-      setTimeout(() => {
-        setErrors(null)
-      }, 3000)
+        if (!form.email || !form.password) return setErrors('Faltan campos por completar');
+
+        setLoading(true)
+        try {
+            const res = await axios.post('http://localhost:3001/auth/login', {
+                email: form.email,
+                password: form.password
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+
+            setLoading(false)
+            localStorage.setItem('token', res.data.token)
+            return navigate('/profile')
+        } catch (err) {
+            setLoading(false)
+            setErrors(err.response.data.error)
+        }
     }
 
-    else {
-		handleLoginMutation.mutate()
-    }
-
-  }
+    if (errors) setTimeout(() => { setErrors(null) }, 5000)
 
   return (
     <div>
-      
-      <h1>Login</h1>
 
-      <h3>{errors}</h3>
+        {loading ? 'Cargando...' : ''}
+        {errors}
 
-      <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
 
-        <input type="email" onChange={((e) => setForm({...form, email: e.target.value}))} />
+            <input type="email" name="email" onChange={e => setForm({...form, email: e.target.value})} autoComplete='off' />
+            <input type="password" name="password" onChange={e => setForm({...form, password: e.target.value})} autoComplete='off' />
 
-        <input type="password" onChange={((e) => setForm({...form, password: e.target.value}))} />
+            <button type="submit"> Login </button>
 
-        <button type="sumbit">Login</button>
-      </form>
+        </form>
 
     </div>
   )

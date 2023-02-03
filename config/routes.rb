@@ -7,4 +7,5 @@ Rails.application.routes.draw do
   resources :users, only: [:index, :show, :create]
   post "/auth/login", to: "authentication#login"
   post "/auth/register", to: "authentication#register"
+  get "/auth/user", to: "authentication#getuser"
 end
